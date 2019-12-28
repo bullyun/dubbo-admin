@@ -21,6 +21,7 @@ import org.apache.dubbo.admin.annotation.Authority;
 import org.apache.dubbo.admin.common.exception.ParamValidationException;
 import org.apache.dubbo.admin.common.exception.ResourceNotFoundException;
 import org.apache.dubbo.admin.common.util.Constants;
+import org.apache.dubbo.admin.data.DataCenter;
 import org.apache.dubbo.admin.model.dto.ConfigDTO;
 import org.apache.dubbo.admin.service.ManagementService;
 import org.apache.dubbo.admin.service.ProviderService;
@@ -45,18 +46,21 @@ public class ManagementController {
 
     private final ManagementService managementService;
     private final ProviderService providerService;
+    private final DataCenter dataCenter;
     private static Pattern CLASS_NAME_PATTERN = Pattern.compile("([a-zA-Z_$][a-zA-Z\\d_$]*\\.)*[a-zA-Z_$][a-zA-Z\\d_$]*");
 
 
     @Autowired
-    public ManagementController(ManagementService managementService, ProviderService providerService) {
+    public ManagementController(ManagementService managementService, ProviderService providerService, DataCenter dataCenter) {
         this.managementService = managementService;
         this.providerService = providerService;
+        this.dataCenter = dataCenter;
     }
 
     @RequestMapping(value ="/config", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.CREATED)
     public boolean createConfig(@RequestBody ConfigDTO config, @PathVariable String env) {
+        dataCenter.setConfigDTO(config.getKey());
         managementService.setConfig(config);
         return true;
     }
@@ -67,8 +71,10 @@ public class ManagementController {
             throw new ParamValidationException("Unknown ID!");
         }
         String exitConfig = managementService.getConfig(key);
+        dataCenter.setConfigDTO(key);
         if (exitConfig == null) {
-            throw new ResourceNotFoundException("Unknown ID!"); }
+            throw new ResourceNotFoundException("Unknown ID!");
+        }
         return managementService.updateConfig(configDTO);
     }
 
@@ -77,7 +83,7 @@ public class ManagementController {
         Set<String> query = new HashSet<>();
         List<ConfigDTO> configDTOs = new ArrayList<>();
         if (key.equals(Constants.ANY_VALUE)) {
-            query = providerService.findApplications();
+            query.addAll(dataCenter.getConfigDTOs());
             query.add(Constants.GLOBAL_CONFIG);
         } else {
             query.add(key);
@@ -105,6 +111,8 @@ public class ManagementController {
 
     @RequestMapping(value = "/config/{key}", method = RequestMethod.DELETE)
     public boolean deleteConfig(@PathVariable String key, @PathVariable String env) {
-        return managementService.deleteConfig(key);
+        boolean ret = managementService.deleteConfig(key);
+        dataCenter.deleteConfigDTO(key);
+        return ret;
     }
 }

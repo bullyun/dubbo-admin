@@ -24,6 +24,9 @@ import org.apache.dubbo.admin.common.exception.ParamValidationException;
 import org.apache.dubbo.admin.common.exception.ResourceNotFoundException;
 import org.apache.dubbo.admin.common.exception.VersionValidationException;
 import org.apache.dubbo.admin.common.util.Constants;
+import org.apache.dubbo.admin.common.util.ConvertUtil;
+import org.apache.dubbo.admin.common.util.RouteUtils;
+import org.apache.dubbo.admin.data.DataCenter;
 import org.apache.dubbo.admin.model.dto.ConditionRouteDTO;
 import org.apache.dubbo.admin.service.ProviderService;
 import org.apache.dubbo.admin.service.RouteService;
@@ -46,11 +49,13 @@ public class ConditionRoutesController {
 
     private final RouteService routeService;
     private final ProviderService providerService;
+    private final DataCenter dataCenter;
 
     @Autowired
-    public ConditionRoutesController(RouteService routeService, ProviderService providerService) {
+    public ConditionRoutesController(RouteService routeService, ProviderService providerService, DataCenter dataCenter) {
         this.routeService = routeService;
         this.providerService = providerService;
+        this.dataCenter = dataCenter;
     }
 
     @RequestMapping(method = RequestMethod.POST)
@@ -64,6 +69,7 @@ public class ConditionRoutesController {
         if (StringUtils.isNotEmpty(app) && providerService.findVersionInApplication(app).equals("2.6")) {
             throw new VersionValidationException("dubbo 2.6 does not support application scope routing rule");
         }
+        dataCenter.setConditionRouteDTO(ConvertUtil.getIdFromDTO(routeDTO));
         routeService.createConditionRoute(routeDTO);
         return true;
     }
@@ -72,6 +78,7 @@ public class ConditionRoutesController {
     public boolean updateRule(@PathVariable String id, @RequestBody ConditionRouteDTO newConditionRoute, @PathVariable String env) {
         id = id.replace(Constants.ANY_VALUE, Constants.PATH_SEPARATOR);
         ConditionRouteDTO oldConditionRoute = routeService.findConditionRoute(id);
+        dataCenter.setConditionRouteDTO(id);
         if (oldConditionRoute == null) {
             throw new ResourceNotFoundException("can not find route rule for: " + id);
         }
@@ -84,7 +91,15 @@ public class ConditionRoutesController {
                                                 @RequestParam(required = false) String service, @PathVariable String env) {
         ConditionRouteDTO conditionRoute = null;
         List<ConditionRouteDTO> result = new ArrayList<>();
-        if (StringUtils.isNotBlank(application)) {
+        if (StringUtils.equals(application, Constants.ANY_VALUE) || StringUtils.equals(service, Constants.ANY_VALUE)){
+            List<String> keys = dataCenter.getConditionRouteDTOs();
+            for (String key : keys){
+                ConditionRouteDTO dto = routeService.findConditionRoute(key);
+                if (dto != null){
+                    result.add(dto);
+                }
+            }
+        } else if (StringUtils.isNotBlank(application)) {
             conditionRoute = routeService.findConditionRoute(application);
         } else if (StringUtils.isNotBlank(service)) {
             conditionRoute = routeService.findConditionRoute(service);
@@ -111,6 +126,7 @@ public class ConditionRoutesController {
     public boolean deleteRoute(@PathVariable String id, @PathVariable String env) {
         id = id.replace(Constants.ANY_VALUE, Constants.PATH_SEPARATOR);
         routeService.deleteConditionRoute(id);
+        dataCenter.deleteConditionRouteDTO(id);
         return true;
     }
 

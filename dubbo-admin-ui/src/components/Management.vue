@@ -195,6 +195,7 @@
           this.key = ''
           this.dialog = false
           this.readonly = false
+          this.updateId = ''
         },
         openDialog: function () {
           this.dialog = true
@@ -285,7 +286,7 @@
         if (filter !== null) {
           this.filter = filter
         } else {
-          this.filter = 'global'
+          this.filter = '*'
         }
         this.search()
       }

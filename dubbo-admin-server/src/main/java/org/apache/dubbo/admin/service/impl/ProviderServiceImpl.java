@@ -290,7 +290,8 @@ public class ProviderServiceImpl extends AbstractService implements ProviderServ
     public String findVersionInApplication(String application) {
         List<String> services = findServicesByApplication(application);
         if (services == null || services.size() == 0) {
-            throw new ParamValidationException("there is no service for application: " + application);
+            //throw new ParamValidationException("there is no service for application: " + application);
+            return "";
         }
         return findServiceVersion(services.get(0), application);
     }

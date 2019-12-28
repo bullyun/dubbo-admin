@@ -56,7 +56,7 @@
 	<properties>
 		<main.basedir>${project.basedir}</main.basedir>
 		<commons-lang3-version>3.7</commons-lang3-version>
-		<dubbo-version>2.7.3</dubbo-version>
+		<dubbo-version>2.7.4.11</dubbo-version>
 		<curator-version>2.12.0</curator-version>
 		<curator-test-version>4.1.0</curator-test-version>
 		<fastjson-version>1.2.46</fastjson-version>
@@ -123,11 +123,11 @@
 				<version>${dubbo-version}</version>
 			</dependency>
 
-			<dependency>
-				<groupId>org.apache.dubbo</groupId>
-				<artifactId>dubbo-serialization-kryo</artifactId>
-				<version>${dubbo-version}</version>
-			</dependency>
+			<!--<dependency>-->
+				<!--<groupId>org.apache.dubbo</groupId>-->
+				<!--<artifactId>dubbo-serialization-kryo</artifactId>-->
+				<!--<version>${dubbo-version}</version>-->
+			<!--</dependency>-->
 
 			<dependency>
 				<groupId>org.apache.curator</groupId>
